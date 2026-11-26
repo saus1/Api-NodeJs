@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>Administrar productos</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #172033;
+            background: #f5f7fb;
+            font-synthesis: none;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 48px 20px;
+        }
+
+        main {
+            width: min(100%, 680px);
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(1.7rem, 4vw, 2.2rem);
+            letter-spacing: -0.04em;
+        }
+
+        header p,
+        .hint {
+            color: #64708a;
+        }
+
+        header p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        section {
+            margin-top: 20px;
+            padding: 24px;
+            border: 1px solid #e1e6f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 12px 32px rgb(34 49 82 / 5%);
+        }
+
+        h2 {
+            margin: 0 0 18px;
+            font-size: 1.1rem;
+        }
+
+        .fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        label {
+            display: grid;
+            gap: 7px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid #cbd3e1;
+            border-radius: 9px;
+            background: #fff;
+            color: inherit;
+            font: inherit;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #5368df;
+            outline: 3px solid rgb(83 104 223 / 15%);
+        }
+
+        textarea {
+            min-height: 96px;
+            resize: vertical;
+        }
+
+        .wide {
+            grid-column: 1 / -1;
+        }
+
+        button {
+            min-height: 44px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 9px;
+            background: #4056d6;
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        button:hover:not(:disabled) {
+            background: #3045c1;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-top: 18px;
+        }
+
+        .hint {
+            margin: 14px 0 0;
+            font-size: 0.85rem;
+        }
+
+        [role="status"] {
+            min-height: 1.4em;
+            margin: 14px 0 0;
+            font-size: 0.92rem;
+        }
+
+        [role="status"][data-kind="error"] {
+            color: #b42318;
+        }
+
+        [role="status"][data-kind="success"] {
+            color: #137547;
+        }
+
+        @media (max-width: 560px) {
+            body {
+                padding: 28px 14px;
+            }
+
+            section {
+                padding: 20px 16px;
+            }
+
+            .fields {
+                grid-template-columns: 1fr;
+            }
+
+            .wide {
+                grid-column: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <header>
+            <h1>Administrar productos</h1>
+            <p>Inicia sesión para guardar un producto en la colección <strong>products</strong> de Firestore.</p>
+        </header>
+
+        <section aria-labelledby="login-title">
+            <h2 id="login-title">Acceso</h2>
+            <form id="login-form">
+                <div class="fields">
+                    <label>
+                        Correo electrónico
+                        <input name="email" type="email" autocomplete="username" required>
+                    </label>
+                    <label>
+                        Contraseña
+                        <input name="password" type="password" autocomplete="current-password" required>
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button id="login-button" type="submit">Iniciar sesión</button>
+                </div>
+                <p id="login-status" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+
+        <section aria-labelledby="product-title">
+            <h2 id="product-title">Nuevo producto</h2>
+            <form id="product-form">
+                <div class="fields">
+                    <label>
+                        Nombre
+                        <input name="nombre" type="text" maxlength="120" required>
+                    </label>
+                    <label>
+                        Categoría
+                        <input name="categoria" type="text" maxlength="80" required>
+                    </label>
+                    <label>
+                        Precio
+                        <input name="precio" type="number" min="0" step="0.01" required>
+                    </label>
+                    <label>
+                        Stock
+                        <input name="stock" type="number" min="0" step="1" required>
+                    </label>
+                    <label class="wide">
+                        Descripción
+                        <textarea name="descripcion" maxlength="1000" required></textarea>
+                    </label>
+                    <label class="wide">
+                        URL de imagen <span class="hint">(opcional)</span>
+                        <input name="imagen" type="url" maxlength="2048" placeholder="https://ejemplo.com/imagen.jpg">
+                    </label>
+                </div>
+                <div class="form-actions">
+                    <button id="save-button" type="submit" disabled>Guardar producto</button>
+                </div>
+                <p id="product-status" role="status" aria-live="polite"></p>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const loginForm = document.querySelector("#login-form");
+        const productForm = document.querySelector("#product-form");
+        const loginButton = document.querySelector("#login-button");
+        const saveButton = document.querySelector("#save-button");
+        const loginStatus = document.querySelector("#login-status");
+        const productStatus = document.querySelector("#product-status");
+        let token = null;
+
+        function setStatus(element, message, kind) {
+            element.textContent = message;
+            element.dataset.kind = kind || "";
+        }
+
+        async function readResponse(response) {
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                if (response.status === 401) {
+                    throw new Error("Correo o contraseña incorrectos.");
+                }
+                if (response.status === 403) {
+                    const error = new Error("La sesión venció o no es válida. Inicia sesión nuevamente.");
+                    error.status = response.status;
+                    throw error;
+                }
+                throw new Error(body.message || body.mensaje || "No se pudo completar la solicitud.");
+            }
+            return body;
+        }
+
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            loginButton.disabled = true;
+            setStatus(loginStatus, "Verificando acceso...", "");
+
+            try {
+                const formData = new FormData(loginForm);
+                const response = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: formData.get("email"),
+                        password: formData.get("password")
+                    })
+                });
+                const result = await readResponse(response);
+                if (!result.token) {
+                    throw new Error("La API no devolvió un token de acceso.");
+                }
+
+                token = result.token;
+                saveButton.disabled = false;
+                setStatus(loginStatus, "Sesión iniciada. Ya puedes guardar productos.", "success");
+            } catch (error) {
+                token = null;
+                saveButton.disabled = true;
+                setStatus(loginStatus, error.message || "No se pudo iniciar sesión.", "error");
+            } finally {
+                loginButton.disabled = false;
+            }
+        });
+
+        productForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            if (!token) {
+                setStatus(productStatus, "Inicia sesión antes de guardar.", "error");
+                return;
+            }
+
+            saveButton.disabled = true;
+            setStatus(productStatus, "Guardando producto...", "");
+
+            const formData = new FormData(productForm);
+            const product = {
+                nombre: formData.get("nombre").trim(),
+                categoria: formData.get("categoria").trim(),
+                precio: Number(formData.get("precio")),
+                stock: Number(formData.get("stock")),
+                descripcion: formData.get("descripcion").trim()
+            };
+            const imageUrl = formData.get("imagen").trim();
+            if (imageUrl) {
+                product.imagen = imageUrl;
+            }
+
+            try {
+                const response = await fetch("/api/products/create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(product)
+                });
+                const result = await readResponse(response);
+                setStatus(productStatus, `Producto guardado correctamente. ID: ${result.data.id}`, "success");
+                productForm.reset();
+            } catch (error) {
+                setStatus(productStatus, error.message || "No se pudo guardar el producto.", "error");
+                if (error.status === 403) {
+                    token = null;
+                    saveButton.disabled = true;
+                    setStatus(loginStatus, "La sesión venció. Inicia sesión nuevamente.", "error");
+                }
+            } finally {
+                if (token) {
+                    saveButton.disabled = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

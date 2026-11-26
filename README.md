@@ -48,6 +48,13 @@ Proyecto de una API REST desarrollada con Node.js y Express para consultar y adm
 
    El servidor escucha en `http://localhost:3000`.
 
+4. Abre `http://localhost:3000` en el navegador para usar el formulario web. Inicia sesión con el usuario de demostración actual:
+
+   - Correo: `admin@gmail.com`
+   - Contraseña: `123456`
+
+   Completa nombre, categoría, precio, stock y descripción; la URL de imagen es opcional. El formulario envía los datos a la ruta protegida de creación y los guarda en la colección `products` de Firestore.
+
 ## Rutas disponibles
 
 | Método | Ruta | Descripción | Autenticación |
@@ -65,7 +72,7 @@ Para las rutas protegidas, envía el token obtenido al iniciar sesión en el enc
 Authorization: Bearer <token>
 ```
 
-Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir con el valor usado para filtrar. Los documentos de producto se guardan tal como se reciben; la API no define un esquema fijo para sus campos.
+Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir con el valor usado para filtrar. Los documentos de producto se guardan tal como se reciben; la API no define un esquema fijo para sus campos. El formulario web usa `nombre`, `categoria`, `precio`, `stock`, `descripcion` e `imagen` (opcional).
 
 ## Estructura principal
 
@@ -84,4 +91,4 @@ Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir
 
 ## Nota de configuración
 
-La autenticación actual usa un usuario de demostración definido en el controlador de autenticación. Antes de desplegar el proyecto, reemplázalo por un mecanismo de usuarios seguro y protege las claves del archivo `.env`; no compartas ese archivo.
+La autenticación actual usa el usuario de demostración indicado arriba, definido en el controlador de autenticación. Estas credenciales son solo para desarrollo. Antes de desplegar el proyecto, reemplázalas por un mecanismo de usuarios seguro y protege las claves del archivo `.env`; no compartas ese archivo.
