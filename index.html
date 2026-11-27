@@ -159,7 +159,7 @@
             color: #172033;
         }
 
-        .menu button[aria-selected="true"] {
+        .menu button[aria-pressed="true"] {
             border-color: #4056d6;
             background: #4056d6;
             color: #fff;
@@ -210,6 +210,10 @@
             font-size: 0.9rem;
         }
 
+        .cell-label {
+            display: none;
+        }
+
         #results-section {
             margin-top: 24px;
         }
@@ -243,7 +247,13 @@
             }
 
             header {
-                align-items: flex-start;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+            }
+
+            header button {
+                align-self: flex-start;
             }
 
             section {
@@ -260,6 +270,53 @@
 
             .search-layout {
                 grid-template-columns: 1fr;
+            }
+
+            .search-card .form-actions button {
+                width: 100%;
+            }
+
+            #results-section {
+                padding: 16px 12px;
+            }
+
+            .table-wrap {
+                overflow: visible;
+            }
+
+            table,
+            tbody,
+            tbody tr,
+            tbody td {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tbody tr {
+                margin-bottom: 12px;
+                overflow: hidden;
+                border: 1px solid #e1e6f0;
+                border-radius: 10px;
+            }
+
+            tbody td {
+                display: grid;
+                grid-template-columns: minmax(84px, 34%) minmax(0, 1fr);
+                gap: 8px;
+                border-bottom: 1px solid #e1e6f0;
+            }
+
+            .cell-label {
+                display: block;
+                color: #4b5670;
+                font-weight: 700;
+            }
+
+            tbody td:last-child {
+                border-bottom: 0;
             }
         }
 
@@ -319,7 +376,7 @@
             <button id="consulta-tab" type="button" aria-pressed="false" aria-controls="consulta-panel">Consulta de productos</button>
         </nav>
 
-        <section id="alta-panel" role="tabpanel" aria-labelledby="alta-tab">
+        <section id="alta-panel" role="region" aria-labelledby="alta-tab">
             <h2 id="product-title">Alta de producto</h2>
             <form id="product-form">
                 <div class="fields">
@@ -355,7 +412,7 @@
             </form>
         </section>
 
-        <section id="consulta-panel" role="tabpanel" aria-labelledby="consulta-tab" hidden>
+        <section id="consulta-panel" role="region" aria-labelledby="consulta-tab" hidden>
             <h2>Consultar productos</h2>
             <div class="search-layout">
                 <form id="product-search-form" class="search-card">
@@ -483,15 +540,20 @@
             products.forEach((product) => {
                 const row = document.createElement("tr");
                 [
-                    product.id,
-                    product.nombre,
-                    product.categoria,
-                    product.precio,
-                    product.stock,
-                    product.descripcion
-                ].forEach((value) => {
+                    ["ID", product.id],
+                    ["Nombre", product.nombre],
+                    ["Categoría", product.categoria],
+                    ["Precio", product.precio],
+                    ["Stock", product.stock],
+                    ["Descripción", product.descripcion]
+                ].forEach(([label, value]) => {
                     const cell = document.createElement("td");
-                    cell.textContent = value === undefined || value === null ? "—" : String(value);
+                    const mobileLabel = document.createElement("span");
+                    mobileLabel.className = "cell-label";
+                    mobileLabel.textContent = label;
+                    cell.append(mobileLabel, document.createTextNode(
+                        value === undefined || value === null ? "—" : String(value)
+                    ));
                     row.append(cell);
                 });
                 resultsBody.append(row);
