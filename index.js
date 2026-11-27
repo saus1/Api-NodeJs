@@ -28,6 +28,10 @@ app.get("/productos", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
 
+app.get("/fondoIndustria.jpg", (req, res) => {
+    res.sendFile(path.join(__dirname, "fondoIndustria.jpg"));
+});
+
 app.use('/auth', authRouter);
 app.use("/api", rutasProductos);
 
