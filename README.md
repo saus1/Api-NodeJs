@@ -53,7 +53,7 @@ Proyecto de una API REST desarrollada con Node.js y Express para consultar y adm
    - Correo: `admin@gmail.com`
    - Contraseña: `123456`
 
-   Después del acceso, el menú permite dar de alta productos o consultarlos por nombre/ID de Firestore y por categoría. La consulta muestra los resultados y permite imprimirlos con **Imprimir resultados**. Para dar de alta, completa nombre, categoría, precio, stock y descripción; la URL de imagen es opcional. El botón **Cerrar sesión** termina la sesión del navegador.
+   Después del acceso, el menú permite dar de alta productos o consultarlos por nombre y por categoría. En los resultados puedes seleccionar un producto y eliminarlo; el ID interno de Firestore se utiliza para borrarlo, pero no se muestra en la interfaz. También puedes imprimir los resultados con **Imprimir resultados**. Para dar de alta, completa nombre, categoría, precio, stock y descripción; la URL de imagen es opcional. El botón **Cerrar sesión** termina la sesión del navegador.
 
 ## Rutas disponibles
 
@@ -74,7 +74,7 @@ Para las rutas protegidas, envía el token obtenido al iniciar sesión en el enc
 Authorization: Bearer <token>
 ```
 
-Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir con el valor usado para filtrar. Los documentos de producto se guardan tal como se reciben; la API no define un esquema fijo para sus campos. El formulario web usa `nombre`, `categoria`, `precio`, `stock`, `descripcion` e `imagen` (opcional). La búsqueda por nombre/ID se realiza sobre los productos devueltos por la API; la búsqueda por categoría usa el filtro exacto de Firestore.
+Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir con el valor usado para filtrar. Los documentos de producto se guardan tal como se reciben; la API no define un esquema fijo para sus campos. El formulario web usa `nombre`, `categoria`, `precio`, `stock`, `descripcion` e `imagen` (opcional). La búsqueda por nombre se realiza sobre los productos devueltos por la API; la búsqueda por categoría usa el filtro exacto de Firestore. El ID de Firestore se conserva internamente para la operación de borrado y no se presenta en las consultas ni en el listado.
 
 ## Estructura principal
 

@@ -98,6 +98,13 @@
             outline: 3px solid rgb(83 104 223 / 15%);
         }
 
+        input[type="radio"] {
+            width: auto;
+            min-height: auto;
+            padding: 0;
+            accent-color: #4056d6;
+        }
+
         textarea {
             min-height: 96px;
             resize: vertical;
@@ -132,6 +139,14 @@
 
         button.secondary:hover:not(:disabled) {
             background: #f0f3f9;
+        }
+
+        button.danger {
+            background: #b42318;
+        }
+
+        button.danger:hover:not(:disabled) {
+            background: #912018;
         }
 
         button:disabled {
@@ -418,7 +433,7 @@
                 <form id="product-search-form" class="search-card">
                     <h3>Buscar producto</h3>
                     <label>
-                        Nombre o ID de Firestore
+                        Nombre del producto
                         <input name="product" type="search" maxlength="120" required>
                     </label>
                     <div class="form-actions">
@@ -440,13 +455,14 @@
                 <h2 id="results-title">Resultados</h2>
                 <div class="form-actions no-print">
                     <button id="print-button" class="secondary" type="button">Imprimir resultados</button>
+                    <button id="delete-selected-button" class="danger" type="button" disabled>Eliminar seleccionado</button>
                 </div>
                 <p id="query-status" role="status" aria-live="polite"></p>
                 <div class="table-wrap">
                     <table>
                         <thead>
                             <tr>
-                                <th scope="col">ID</th>
+                                <th class="no-print" scope="col">Seleccionar</th>
                                 <th scope="col">Nombre</th>
                                 <th scope="col">Categoría</th>
                                 <th scope="col">Precio</th>
@@ -473,6 +489,7 @@
         const resultsSection = document.querySelector("#results-section");
         const resultsBody = document.querySelector("#results-body");
         const printButton = document.querySelector("#print-button");
+        const deleteSelectedButton = document.querySelector("#delete-selected-button");
         let token = sessionStorage.getItem("accessToken");
 
         if (!token) {
@@ -536,11 +553,24 @@
             resultsSection.hidden = false;
             setStatus(queryStatus, message, products.length ? "success" : "");
             printButton.hidden = products.length === 0;
+            deleteSelectedButton.disabled = true;
 
             products.forEach((product) => {
                 const row = document.createElement("tr");
+                const selectionCell = document.createElement("td");
+                selectionCell.className = "no-print";
+                const mobileLabel = document.createElement("span");
+                mobileLabel.className = "cell-label";
+                mobileLabel.textContent = "Seleccionar";
+                const radio = document.createElement("input");
+                radio.type = "radio";
+                radio.name = "selected-product";
+                radio.value = String(product.id || "");
+                radio.dataset.productName = product.nombre || "producto";
+                radio.setAttribute("aria-label", `Seleccionar ${radio.dataset.productName}`);
+                selectionCell.append(mobileLabel, radio);
+                row.append(selectionCell);
                 [
-                    ["ID", product.id],
                     ["Nombre", product.nombre],
                     ["Categoría", product.categoria],
                     ["Precio", product.precio],
@@ -559,6 +589,12 @@
                 resultsBody.append(row);
             });
         }
+
+        resultsBody.addEventListener("change", (event) => {
+            if (event.target.matches('input[name="selected-product"]')) {
+                deleteSelectedButton.disabled = false;
+            }
+        });
 
         function handleSessionError(error) {
             if (error.status === 401 || error.status === 403) {
@@ -600,8 +636,8 @@
                     },
                     body: JSON.stringify(product)
                 });
-                const result = await readResponse(response);
-                setStatus(productStatus, `Producto guardado correctamente. ID: ${result.data.id}`, "success");
+                await readResponse(response);
+                setStatus(productStatus, "Producto guardado correctamente.", "success");
                 productForm.reset();
             } catch (error) {
                 setStatus(productStatus, error.message || "No se pudo guardar el producto.", "error");
@@ -623,12 +659,11 @@
                 const products = await searchProducts("/api/products");
                 const normalizedQuery = query.toLocaleLowerCase();
                 const matches = products.filter((product) =>
-                    String(product.id || "").toLocaleLowerCase() === normalizedQuery ||
                     String(product.nombre || "").toLocaleLowerCase().includes(normalizedQuery)
                 );
                 showResults(matches, matches.length
                     ? `${matches.length} producto(s) encontrado(s).`
-                    : "No se encontraron productos con ese nombre o ID.");
+                    : "No se encontraron productos con ese nombre.");
             } catch (error) {
                 resultsSection.hidden = false;
                 setStatus(queryStatus, error.message || "No se pudo buscar el producto.", "error");
@@ -656,6 +691,48 @@
                 handleSessionError(error);
             } finally {
                 categorySearchButton.disabled = false;
+            }
+        });
+
+        deleteSelectedButton.addEventListener("click", async () => {
+            const selectedProduct = resultsBody.querySelector('input[name="selected-product"]:checked');
+            if (!selectedProduct) {
+                return;
+            }
+            if (!token) {
+                setStatus(queryStatus, "Inicia sesión antes de eliminar productos.", "error");
+                return;
+            }
+
+            const productId = selectedProduct.value;
+            const productName = selectedProduct.dataset.productName;
+            if (!window.confirm(`¿Eliminar "${productName}"? Esta acción no se puede deshacer.`)) {
+                return;
+            }
+
+            deleteSelectedButton.disabled = true;
+            setStatus(queryStatus, "Eliminando producto...", "");
+            try {
+                const response = await fetch(`/api/products/${encodeURIComponent(productId)}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                await readResponse(response);
+                const row = selectedProduct.closest("tr");
+                if (row) {
+                    row.remove();
+                }
+                const remainingProducts = resultsBody.querySelectorAll("tr").length;
+                printButton.hidden = remainingProducts === 0;
+                setStatus(queryStatus, `Producto "${productName}" eliminado correctamente.`, "success");
+            } catch (error) {
+                setStatus(queryStatus, error.message || "No se pudo eliminar el producto.", "error");
+                handleSessionError(error);
+            } finally {
+                deleteSelectedButton.disabled = !token ||
+                    !resultsBody.querySelector('input[name="selected-product"]:checked');
             }
         });
 
