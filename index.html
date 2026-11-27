@@ -25,11 +25,15 @@
         }
 
         main {
-            width: min(100%, 680px);
+            width: min(100%, 960px);
             margin: 0 auto;
         }
 
         header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
             margin-bottom: 24px;
         }
 
@@ -119,6 +123,17 @@
             background: #3045c1;
         }
 
+        button.secondary {
+            flex-shrink: 0;
+            border: 1px solid #cbd3e1;
+            background: #fff;
+            color: #172033;
+        }
+
+        button.secondary:hover:not(:disabled) {
+            background: #f0f3f9;
+        }
+
         button:disabled {
             cursor: wait;
             opacity: 0.65;
@@ -129,6 +144,74 @@
             align-items: center;
             gap: 14px;
             margin-top: 18px;
+        }
+
+        .menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 22px 0;
+        }
+
+        .menu button {
+            border: 1px solid #cbd3e1;
+            background: #fff;
+            color: #172033;
+        }
+
+        .menu button[aria-selected="true"] {
+            border-color: #4056d6;
+            background: #4056d6;
+            color: #fff;
+        }
+
+        .search-layout {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        .search-card {
+            min-width: 0;
+            padding: 18px;
+            border: 1px solid #e1e6f0;
+            border-radius: 12px;
+        }
+
+        .search-card h3 {
+            margin: 0 0 14px;
+            font-size: 1rem;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 11px 12px;
+            border-bottom: 1px solid #e1e6f0;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f5f7fb;
+            font-size: 0.85rem;
+        }
+
+        td {
+            overflow-wrap: anywhere;
+            font-size: 0.9rem;
+        }
+
+        #results-section {
+            margin-top: 24px;
         }
 
         .hint {
@@ -150,9 +233,17 @@
             color: #137547;
         }
 
+        [hidden] {
+            display: none !important;
+        }
+
         @media (max-width: 560px) {
             body {
                 padding: 28px 14px;
+            }
+
+            header {
+                align-items: flex-start;
             }
 
             section {
@@ -166,38 +257,70 @@
             .wide {
                 grid-column: auto;
             }
+
+            .search-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media print {
+            @page {
+                margin: 16mm;
+            }
+
+            body {
+                padding: 0;
+                background: #fff;
+            }
+
+            body * {
+                visibility: hidden;
+            }
+
+            #results-section,
+            #results-section * {
+                visibility: visible;
+            }
+
+            #results-section {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                border: 0;
+                box-shadow: none;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            th {
+                background: #eee !important;
+                print-color-adjust: exact;
+            }
         }
     </style>
 </head>
 <body>
     <main>
         <header>
-            <h1>Administrar productos</h1>
-            <p>Inicia sesión para guardar un producto en la colección <strong>products</strong> de Firestore.</p>
+            <div>
+                <h1>Administrar productos</h1>
+                <p>Gestiona los productos guardados en la colección <strong>products</strong> de Firestore.</p>
+            </div>
+            <button id="logout-button" class="secondary" type="button">Cerrar sesión</button>
         </header>
 
-        <section aria-labelledby="login-title">
-            <h2 id="login-title">Acceso</h2>
-            <form id="login-form">
-                <div class="fields">
-                    <label>
-                        Correo electrónico
-                        <input name="email" type="email" autocomplete="username" required>
-                    </label>
-                    <label>
-                        Contraseña
-                        <input name="password" type="password" autocomplete="current-password" required>
-                    </label>
-                </div>
-                <div class="form-actions">
-                    <button id="login-button" type="submit">Iniciar sesión</button>
-                </div>
-                <p id="login-status" role="status" aria-live="polite"></p>
-            </form>
-        </section>
+        <nav class="menu no-print" aria-label="Menú principal">
+            <button id="alta-tab" type="button" aria-pressed="true" aria-controls="alta-panel">Alta de productos</button>
+            <button id="consulta-tab" type="button" aria-pressed="false" aria-controls="consulta-panel">Consulta de productos</button>
+        </nav>
 
-        <section aria-labelledby="product-title">
-            <h2 id="product-title">Nuevo producto</h2>
+        <section id="alta-panel" role="tabpanel" aria-labelledby="alta-tab">
+            <h2 id="product-title">Alta de producto</h2>
             <form id="product-form">
                 <div class="fields">
                     <label>
@@ -231,16 +354,95 @@
                 <p id="product-status" role="status" aria-live="polite"></p>
             </form>
         </section>
+
+        <section id="consulta-panel" role="tabpanel" aria-labelledby="consulta-tab" hidden>
+            <h2>Consultar productos</h2>
+            <div class="search-layout">
+                <form id="product-search-form" class="search-card">
+                    <h3>Buscar producto</h3>
+                    <label>
+                        Nombre o ID de Firestore
+                        <input name="product" type="search" maxlength="120" required>
+                    </label>
+                    <div class="form-actions">
+                        <button id="product-search-button" type="submit">Buscar producto</button>
+                    </div>
+                </form>
+                <form id="category-search-form" class="search-card">
+                    <h3>Buscar por categoría</h3>
+                    <label>
+                        Categoría
+                        <input name="category" type="search" maxlength="80" required>
+                    </label>
+                    <div class="form-actions">
+                        <button id="category-search-button" type="submit">Buscar categoría</button>
+                    </div>
+                </form>
+            </div>
+            <section id="results-section" aria-labelledby="results-title" hidden>
+                <h2 id="results-title">Resultados</h2>
+                <div class="form-actions no-print">
+                    <button id="print-button" class="secondary" type="button">Imprimir resultados</button>
+                </div>
+                <p id="query-status" role="status" aria-live="polite"></p>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">Categoría</th>
+                                <th scope="col">Precio</th>
+                                <th scope="col">Stock</th>
+                                <th scope="col">Descripción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body"></tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
     </main>
 
     <script>
-        const loginForm = document.querySelector("#login-form");
         const productForm = document.querySelector("#product-form");
-        const loginButton = document.querySelector("#login-button");
         const saveButton = document.querySelector("#save-button");
-        const loginStatus = document.querySelector("#login-status");
         const productStatus = document.querySelector("#product-status");
-        let token = null;
+        const productSearchForm = document.querySelector("#product-search-form");
+        const categorySearchForm = document.querySelector("#category-search-form");
+        const productSearchButton = document.querySelector("#product-search-button");
+        const categorySearchButton = document.querySelector("#category-search-button");
+        const queryStatus = document.querySelector("#query-status");
+        const resultsSection = document.querySelector("#results-section");
+        const resultsBody = document.querySelector("#results-body");
+        const printButton = document.querySelector("#print-button");
+        let token = sessionStorage.getItem("accessToken");
+
+        if (!token) {
+            window.location.replace("/");
+        } else {
+            saveButton.disabled = false;
+        }
+
+        document.querySelector("#logout-button").addEventListener("click", () => {
+            sessionStorage.removeItem("accessToken");
+            window.location.replace("/");
+        });
+
+        const tabs = [
+            { button: document.querySelector("#alta-tab"), panel: document.querySelector("#alta-panel") },
+            { button: document.querySelector("#consulta-tab"), panel: document.querySelector("#consulta-panel") }
+        ];
+
+        tabs.forEach((tab) => {
+            tab.button.addEventListener("click", () => {
+                tabs.forEach((item) => {
+                    const selected = item === tab;
+                    item.button.setAttribute("aria-pressed", String(selected));
+                    item.panel.hidden = !selected;
+                });
+            });
+        });
 
         function setStatus(element, message, kind) {
             element.textContent = message;
@@ -249,11 +451,11 @@
 
         async function readResponse(response) {
             const body = await response.json().catch(() => ({}));
+            if (response.status === 404 && body.message === "Producto/s no encontrado/s") {
+                return { data: [] };
+            }
             if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error("Correo o contraseña incorrectos.");
-                }
-                if (response.status === 403) {
+                if (response.status === 401 || response.status === 403) {
                     const error = new Error("La sesión venció o no es válida. Inicia sesión nuevamente.");
                     error.status = response.status;
                     throw error;
@@ -263,37 +465,46 @@
             return body;
         }
 
-        loginForm.addEventListener("submit", async (event) => {
-            event.preventDefault();
-            loginButton.disabled = true;
-            setStatus(loginStatus, "Verificando acceso...", "");
-
-            try {
-                const formData = new FormData(loginForm);
-                const response = await fetch("/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        email: formData.get("email"),
-                        password: formData.get("password")
-                    })
-                });
-                const result = await readResponse(response);
-                if (!result.token) {
-                    throw new Error("La API no devolvió un token de acceso.");
-                }
-
-                token = result.token;
-                saveButton.disabled = false;
-                setStatus(loginStatus, "Sesión iniciada. Ya puedes guardar productos.", "success");
-            } catch (error) {
-                token = null;
-                saveButton.disabled = true;
-                setStatus(loginStatus, error.message || "No se pudo iniciar sesión.", "error");
-            } finally {
-                loginButton.disabled = false;
+        async function searchProducts(url) {
+            const response = await fetch(url);
+            const result = await readResponse(response);
+            if (!Array.isArray(result.data)) {
+                throw new Error("La API devolvió una respuesta de productos no válida.");
             }
-        });
+            return result.data;
+        }
+
+        function showResults(products, message) {
+            resultsBody.replaceChildren();
+            resultsSection.hidden = false;
+            setStatus(queryStatus, message, products.length ? "success" : "");
+            printButton.hidden = products.length === 0;
+
+            products.forEach((product) => {
+                const row = document.createElement("tr");
+                [
+                    product.id,
+                    product.nombre,
+                    product.categoria,
+                    product.precio,
+                    product.stock,
+                    product.descripcion
+                ].forEach((value) => {
+                    const cell = document.createElement("td");
+                    cell.textContent = value === undefined || value === null ? "—" : String(value);
+                    row.append(cell);
+                });
+                resultsBody.append(row);
+            });
+        }
+
+        function handleSessionError(error) {
+            if (error.status === 401 || error.status === 403) {
+                token = null;
+                sessionStorage.removeItem("accessToken");
+                window.location.replace("/");
+            }
+        }
 
         productForm.addEventListener("submit", async (event) => {
             event.preventDefault();
@@ -332,16 +543,62 @@
                 productForm.reset();
             } catch (error) {
                 setStatus(productStatus, error.message || "No se pudo guardar el producto.", "error");
-                if (error.status === 403) {
-                    token = null;
-                    saveButton.disabled = true;
-                    setStatus(loginStatus, "La sesión venció. Inicia sesión nuevamente.", "error");
-                }
+                handleSessionError(error);
             } finally {
                 if (token) {
                     saveButton.disabled = false;
                 }
             }
+        });
+
+        productSearchForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            productSearchButton.disabled = true;
+            setStatus(queryStatus, "Buscando producto...", "");
+
+            try {
+                const query = new FormData(productSearchForm).get("product").trim();
+                const products = await searchProducts("/api/products");
+                const normalizedQuery = query.toLocaleLowerCase();
+                const matches = products.filter((product) =>
+                    String(product.id || "").toLocaleLowerCase() === normalizedQuery ||
+                    String(product.nombre || "").toLocaleLowerCase().includes(normalizedQuery)
+                );
+                showResults(matches, matches.length
+                    ? `${matches.length} producto(s) encontrado(s).`
+                    : "No se encontraron productos con ese nombre o ID.");
+            } catch (error) {
+                resultsSection.hidden = false;
+                setStatus(queryStatus, error.message || "No se pudo buscar el producto.", "error");
+                handleSessionError(error);
+            } finally {
+                productSearchButton.disabled = false;
+            }
+        });
+
+        categorySearchForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            categorySearchButton.disabled = true;
+            setStatus(queryStatus, "Buscando categoría...", "");
+
+            try {
+                const category = new FormData(categorySearchForm).get("category").trim();
+                const query = new URLSearchParams({ category });
+                const products = await searchProducts(`/api/products?${query.toString()}`);
+                showResults(products, products.length
+                    ? `${products.length} producto(s) encontrado(s) en la categoría "${category}".`
+                    : `No se encontraron productos en la categoría "${category}".`);
+            } catch (error) {
+                resultsSection.hidden = false;
+                setStatus(queryStatus, error.message || "No se pudo buscar la categoría.", "error");
+                handleSessionError(error);
+            } finally {
+                categorySearchButton.disabled = false;
+            }
+        });
+
+        printButton.addEventListener("click", () => {
+            window.print();
         });
     </script>
 </body>

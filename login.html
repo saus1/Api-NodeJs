@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>Acceso | Administrar productos</title>
+    <style>
+        :root {
+            color-scheme: light;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: #172033;
+            background: #f5f7fb;
+            font-synthesis: none;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            display: grid;
+            min-height: 100vh;
+            margin: 0;
+            padding: 24px 16px;
+            place-items: center;
+        }
+
+        main {
+            width: min(100%, 440px);
+            padding: 30px;
+            border: 1px solid #e1e6f0;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 12px 32px rgb(34 49 82 / 5%);
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: 1.8rem;
+            letter-spacing: -0.04em;
+        }
+
+        p {
+            margin: 0 0 24px;
+            color: #64708a;
+            line-height: 1.5;
+        }
+
+        form,
+        label {
+            display: grid;
+        }
+
+        form {
+            gap: 16px;
+        }
+
+        label {
+            gap: 7px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            min-height: 44px;
+            padding: 10px 12px;
+            border: 1px solid #cbd3e1;
+            border-radius: 9px;
+            background: #fff;
+            color: inherit;
+            font: inherit;
+        }
+
+        input:focus {
+            border-color: #5368df;
+            outline: 3px solid rgb(83 104 223 / 15%);
+        }
+
+        button {
+            min-height: 44px;
+            margin-top: 4px;
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 9px;
+            background: #4056d6;
+            color: #fff;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 700;
+        }
+
+        button:hover:not(:disabled) {
+            background: #3045c1;
+        }
+
+        button:disabled {
+            cursor: wait;
+            opacity: 0.65;
+        }
+
+        [role="status"] {
+            min-height: 1.4em;
+            margin: 16px 0 0;
+            font-size: 0.92rem;
+        }
+
+        [role="status"][data-kind="error"] {
+            color: #b42318;
+        }
+
+        @media (max-width: 480px) {
+            main {
+                padding: 24px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Iniciar sesión</h1>
+        <p>Ingresa tus credenciales para acceder al sistema de productos.</p>
+        <form id="login-form">
+            <label>
+                Correo electrónico
+                <input name="email" type="email" autocomplete="username" required>
+            </label>
+            <label>
+                Contraseña
+                <input name="password" type="password" autocomplete="current-password" required>
+            </label>
+            <button id="login-button" type="submit">Entrar</button>
+        </form>
+        <p id="login-status" role="status" aria-live="polite"></p>
+    </main>
+
+    <script>
+        const loginForm = document.querySelector("#login-form");
+        const loginButton = document.querySelector("#login-button");
+        const loginStatus = document.querySelector("#login-status");
+
+        function setStatus(message, kind) {
+            loginStatus.textContent = message;
+            loginStatus.dataset.kind = kind || "";
+        }
+
+        loginForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+            loginButton.disabled = true;
+            setStatus("Verificando acceso...", "");
+
+            try {
+                const formData = new FormData(loginForm);
+                const response = await fetch("/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        email: formData.get("email"),
+                        password: formData.get("password")
+                    })
+                });
+                const result = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error("Correo o contraseña incorrectos.");
+                    }
+                    throw new Error(result.message || result.mensaje || "No se pudo iniciar sesión.");
+                }
+                if (!result.token) {
+                    throw new Error("La API no devolvió un token de acceso.");
+                }
+
+                sessionStorage.setItem("accessToken", result.token);
+                window.location.assign("/productos");
+            } catch (error) {
+                setStatus(error.message || "No se pudo iniciar sesión.", "error");
+                loginButton.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

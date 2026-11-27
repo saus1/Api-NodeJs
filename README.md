@@ -48,17 +48,19 @@ Proyecto de una API REST desarrollada con Node.js y Express para consultar y adm
 
    El servidor escucha en `http://localhost:3000`.
 
-4. Abre `http://localhost:3000` en el navegador para usar el formulario web. Inicia sesión con el usuario de demostración actual:
+4. Abre `http://localhost:3000` en el navegador. Ingresa en la página de acceso y, si las credenciales son correctas, pasarás al formulario de productos. El usuario de demostración actual es:
 
    - Correo: `admin@gmail.com`
    - Contraseña: `123456`
 
-   Completa nombre, categoría, precio, stock y descripción; la URL de imagen es opcional. El formulario envía los datos a la ruta protegida de creación y los guarda en la colección `products` de Firestore.
+   Después del acceso, el menú permite dar de alta productos o consultarlos por nombre/ID de Firestore y por categoría. La consulta muestra los resultados y permite imprimirlos con **Imprimir resultados**. Para dar de alta, completa nombre, categoría, precio, stock y descripción; la URL de imagen es opcional. El botón **Cerrar sesión** termina la sesión del navegador.
 
 ## Rutas disponibles
 
 | Método | Ruta | Descripción | Autenticación |
 |---|---|---|---|
+| `GET` | `/` | Muestra la página de acceso. | No |
+| `GET` | `/productos` | Muestra el formulario para guardar productos; requiere una sesión iniciada en el navegador. | No |
 | `POST` | `/auth/login` | Inicia sesión y devuelve un JWT. Recibe `email` y `password` en el cuerpo JSON. | No |
 | `GET` | `/api/products` | Devuelve todos los productos. | No |
 | `GET` | `/api/products?category=valor` | Filtra productos por el campo `categoria`. | No |
@@ -72,7 +74,7 @@ Para las rutas protegidas, envía el token obtenido al iniciar sesión en el enc
 Authorization: Bearer <token>
 ```
 
-Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir con el valor usado para filtrar. Los documentos de producto se guardan tal como se reciben; la API no define un esquema fijo para sus campos. El formulario web usa `nombre`, `categoria`, `precio`, `stock`, `descripcion` e `imagen` (opcional).
+Los tokens tienen una duración de una hora. El campo `categoria` debe coincidir con el valor usado para filtrar. Los documentos de producto se guardan tal como se reciben; la API no define un esquema fijo para sus campos. El formulario web usa `nombre`, `categoria`, `precio`, `stock`, `descripcion` e `imagen` (opcional). La búsqueda por nombre/ID se realiza sobre los productos devueltos por la API; la búsqueda por categoría usa el filtro exacto de Firestore.
 
 ## Estructura principal
 
